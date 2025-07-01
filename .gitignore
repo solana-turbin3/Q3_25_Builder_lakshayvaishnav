@@ -1,0 +1,48 @@
+*wallet.json
+
+
+# --- Node.js ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.env
+.env.*
+
+# Optional cache folders
+.cache/
+dist/
+build/
+
+# --- Rust ---
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Rust by-products
+*.rlib
+*.dSYM
+*.d
+*.o
+*.so
+*.dll
+*.exe
+*.a
+*.lib
+
+# --- Solana ---
+# Solana CLI and Anchor-generated files
+.solana/
+.anchor/
+**/program-keypair.json
+**/program.so
+
+# Optional: compiled IDLs
+**/idl/
+**/types/
+
+# Test validator data
+test-ledger/
+validator-keypai
+
