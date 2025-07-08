@@ -7,7 +7,7 @@ import {
 } from "@solana/web3.js";
 import { Program, Wallet, AnchorProvider, Address } from "@coral-xyz/anchor";
 import { WbaVault, IDL } from "./programs/wba_vault";
-import wallet from "./wallet/turbin3-wallet.json";
+import wallet from "../turbin3-wallet.json";
 /// J8qKEmQpadFeBuXAVseH8GNrvsyBhMT8MHSVD3enRgJz
 
 // Import our keypair from the wallet file
