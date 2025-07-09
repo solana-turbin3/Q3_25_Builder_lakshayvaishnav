@@ -53,6 +53,20 @@ describe("vault", () => {
     }).signers([user]).rpc()
 
     console.log("✅ here is the transaction : - ", tx);
-
   });
+
+  it("deposit", async() => {
+
+  })
 });
+
+
+
+
+
+
+
+
+
+
+
