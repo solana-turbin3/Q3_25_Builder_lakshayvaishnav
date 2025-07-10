@@ -8,6 +8,7 @@ import { assert } from "chai";
 
 
 
+
 describe("vault", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
@@ -75,8 +76,8 @@ describe("vault", () => {
     const tx = await program.methods.deposit(depositAmount).accounts({
       user: user.publicKey
     }).signers([user])
-    .rpc()
-    
+      .rpc()
+
     console.log("✅ deposited tx : ", tx);
 
     // assert the balance
@@ -89,6 +90,25 @@ describe("vault", () => {
     assert.equal((vaultBalance - rentExempt), Number(depositAmount));
 
   })
+
+  it("withdraws", async () => {
+    const withdrawAmount = new anchor.BN(0.1 * LAMPORTS_PER_SOL);
+    const vaultBalanceBeforeWithdraw = await connection.getBalance(vaultPda);
+
+
+    const signerSeeds = PublicKey.findProgramAddressSync([Buffer.from("vault"), vaultStatePda.toBuffer()], program.programId);  
+    const tx = await program.methods.withdraw(withdrawAmount).accounts({
+      user: user.publicKey
+    }).signers([user])
+    .rpc()
+
+    const vaultBalanceAfterWithdraw = await connection.getBalance(vaultPda)
+   
+    console.log("✅ withdraw tx : ", tx)
+
+    assert.equal(vaultBalanceBeforeWithdraw, vaultBalanceAfterWithdraw + Number(withdrawAmount))
+  })
+
 });
 
 
