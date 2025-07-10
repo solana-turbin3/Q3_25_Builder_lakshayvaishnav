@@ -96,19 +96,33 @@ describe("vault", () => {
     const vaultBalanceBeforeWithdraw = await connection.getBalance(vaultPda);
 
 
-    const signerSeeds = PublicKey.findProgramAddressSync([Buffer.from("vault"), vaultStatePda.toBuffer()], program.programId);  
+    const signerSeeds = PublicKey.findProgramAddressSync([Buffer.from("vault"), vaultStatePda.toBuffer()], program.programId);
     const tx = await program.methods.withdraw(withdrawAmount).accounts({
       user: user.publicKey
     }).signers([user])
-    .rpc()
+      .rpc()
 
     const vaultBalanceAfterWithdraw = await connection.getBalance(vaultPda)
-   
+
     console.log("✅ withdraw tx : ", tx)
 
     assert.equal(vaultBalanceBeforeWithdraw, vaultBalanceAfterWithdraw + Number(withdrawAmount))
   })
 
+  it("close the vault", async () => {
+
+    const tx = await program.methods.closeVault().accounts({
+      user: user.publicKey
+    }).signers([user]).rpc();
+
+    console.log("✅ close successfully : ", tx);
+
+    let vaultAccountInfo = await connection.getAccountInfo(vaultPda);
+    let vaultStateAccountInfo = await connection.getAccountInfo(vaultStatePda);
+    
+    assert.ok(vaultAccountInfo === null);
+    assert.ok(vaultStateAccountInfo === null);
+  })
 });
 
 
