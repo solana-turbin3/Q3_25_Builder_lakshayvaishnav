@@ -71,3 +71,22 @@ pub struct Take<'info> {
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
+
+impl<'info> Take<'info> {
+    pub fn deposit(&mut self, amount: u64) -> Result<()> {
+        let cpi_program = self.token_program.to_account_info();
+
+        let transfer_accounts = TransferChecked {
+            authority: self.taker.to_account_info(),
+            from: self.taker_ata_b.to_account_info(),
+            to: self.vault.to_account_info(),
+            mint: self.mint_b.to_account_info(),
+        };
+
+        let cpi_ctx = CpiContext::new(cpi_program, transfer_accounts);
+
+        transfer_checked(cpi_ctx, amount, self.mint_b.decimals)?;
+
+        Ok(())
+    }
+}
