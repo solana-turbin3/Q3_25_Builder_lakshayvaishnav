@@ -89,4 +89,45 @@ impl<'info> Take<'info> {
 
         Ok(())
     }
+
+    pub fn withdraw_and_close_vault(&mut self) -> Result<()> {
+        let seeds = &[
+            b"escrow",
+            self.maker.to_account_info().key.as_ref(),
+            &self.escrow.seed.to_le_bytes()[..],
+            &[self.escrow.bump],
+        ];
+        let signer_seeds = &[&seeds[..]];
+
+        let cpi_program = self.token_program.to_account_info();
+
+        let cpi_accounts = TransferChecked {
+            from: self.vault.to_account_info(),
+            to: self.taker_ata_a.to_account_info(),
+            authority: self.escrow.to_account_info(),
+            mint: self.mint_a.to_account_info(),
+        };
+
+        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+
+        transfer_checked(cpi_ctx, self.vault.amount, self.mint_a.decimals)?;
+
+        let close_accounts = CloseAccount {
+            account: self.vault.to_account_info(),
+            destination: self.taker.to_account_info(),
+            authority: self.escrow.to_account_info(),
+        };
+
+        let cpi_close_program = self.token_program.to_account_info();
+
+        let cpi_close_ctx = CpiContext::new_with_signer(
+            cpi_close_program,
+            close_accounts,
+            signer_seeds
+        );
+
+        close_account(cpi_close_ctx)?;
+
+        Ok(())
+    }
 }
