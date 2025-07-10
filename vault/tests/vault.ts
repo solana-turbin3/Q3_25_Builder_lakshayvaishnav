@@ -2,6 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Vault } from "../target/types/vault";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
+import { assert } from "chai";
 
 
 
@@ -41,10 +42,9 @@ describe("vault", () => {
   let vaultStateBump: number;
 
   it("Is initialized!", async () => {
-    // Add your test here.
 
-    [vaultPda, vaultBump] = await PublicKey.findProgramAddressSync([Buffer.from("vault"), user.publicKey.toBuffer()], program.programId);
-    [vaultStatePda, vaultStateBump] = await PublicKey.findProgramAddressSync([Buffer.from("state"), vaultPda.toBuffer()], program.programId);
+    [vaultStatePda, vaultStateBump] = await PublicKey.findProgramAddressSync([Buffer.from("state"), user.publicKey.toBuffer()], program.programId);
+    [vaultPda, vaultBump] = await PublicKey.findProgramAddressSync([Buffer.from("vault"), vaultStatePda.toBuffer()], program.programId);
 
     // call to initialize
 
@@ -52,10 +52,41 @@ describe("vault", () => {
       user: user.publicKey
     }).signers([user]).rpc()
 
-    console.log("✅ here is the transaction : - ", tx);
+    console.log("✅ initialized :  ", tx);
+
+    // fetch and assert vault state bumps
+    const state = await program.account.vaultState.fetch(vaultStatePda);
+    console.log("state : ", state);
+    assert.equal(state.vaultBump, vaultBump);
+    assert.equal(state.stateBump, vaultStateBump);
+
+    // assert vault has rent-exempt balance
+    const vaultBalance = await connection.getBalance(vaultPda);
+    const rentExempt = await connection.getMinimumBalanceForRentExemption(
+      (await connection.getAccountInfo(vaultPda))!.data.length
+    )
+
+    assert.ok(vaultBalance === rentExempt);
   });
 
-  it("deposit", async() => {
+  it("deposit", async () => {
+    const depositAmount = new anchor.BN(0.5 * LAMPORTS_PER_SOL);
+
+    const tx = await program.methods.deposit(depositAmount).accounts({
+      user: user.publicKey
+    }).signers([user])
+    .rpc()
+    
+    console.log("✅ deposited tx : ", tx);
+
+    // assert the balance
+    const vaultBalance = await connection.getBalance(vaultPda);
+
+    const rentExempt = await connection.getMinimumBalanceForRentExemption(
+      (await connection.getAccountInfo(vaultPda))!.data.length
+    )
+
+    assert.equal((vaultBalance - rentExempt), Number(depositAmount));
 
   })
 });
