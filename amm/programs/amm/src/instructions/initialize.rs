@@ -31,6 +31,14 @@ pub struct Initialize<'info> {
     )]
     pub config: Account<'info, Config>,
 
+    #[account(
+        init, 
+        payer = initializer,
+        associated_token::mint = mint_x,
+        associated_token::authority = config
+    )]
+    pub vault_x : Account<'info, TokenAccount>,
+
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
