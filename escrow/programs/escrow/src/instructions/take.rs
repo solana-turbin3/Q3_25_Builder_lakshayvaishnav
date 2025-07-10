@@ -73,7 +73,7 @@ pub struct Take<'info> {
 }
 
 impl<'info> Take<'info> {
-    pub fn deposit(&mut self, amount: u64) -> Result<()> {
+    pub fn deposit(&mut self) -> Result<()> {
         let cpi_program = self.token_program.to_account_info();
 
         let transfer_accounts = TransferChecked {
@@ -85,7 +85,7 @@ impl<'info> Take<'info> {
 
         let cpi_ctx = CpiContext::new(cpi_program, transfer_accounts);
 
-        transfer_checked(cpi_ctx, amount, self.mint_b.decimals)?;
+        transfer_checked(cpi_ctx, self.escrow.receive, self.mint_b.decimals)?;
 
         Ok(())
     }
