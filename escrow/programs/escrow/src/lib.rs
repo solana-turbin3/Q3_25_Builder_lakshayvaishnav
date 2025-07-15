@@ -23,7 +23,7 @@ pub mod escrow {
         Ok(())
     }
 
-    pub fn refund(ctx: Context<Refund>) -> Result<()> {
+    pub fn refund(ctx: Context<Refund>, seed:u64) -> Result<()> {
         ctx.accounts.refund_and_close_vault()
     }
 
