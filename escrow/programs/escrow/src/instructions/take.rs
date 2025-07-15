@@ -21,6 +21,7 @@ pub struct Take<'info> {
     #[account(mut)]
     pub taker: Signer<'info>,
 
+    #[account(mut)]
     pub maker: SystemAccount<'info>,
 
     pub mint_a: InterfaceAccount<'info, Mint>,
@@ -79,7 +80,7 @@ impl<'info> Take<'info> {
         let transfer_accounts = TransferChecked {
             authority: self.taker.to_account_info(),
             from: self.taker_ata_b.to_account_info(),
-            to: self.vault.to_account_info(),
+            to: self.maker_ata_b.to_account_info(),
             mint: self.mint_b.to_account_info(),
         };
 

@@ -144,6 +144,44 @@ describe("escrow", () => {
     console.log("✅ your refund tx : ", tx.toString())
   })
 
+  it("CREATE ESCROW AGAIN", async () => {
+    const tx = await program.methods.make(seed, new BN(1_000_000_000), new BN(1_000_000_000)).accountsPartial({
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      escrow: escrow,
+      maker: maker.publicKey,
+      makerAtaA: makerAtaA.address,
+      mintA: mintA,
+      mintB: mintB,
+      vault: vault,
+      systemProgram: SYSTEM_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID
+    }).signers([maker]).rpc({ commitment: "confirmed" })
+    console.log("✅ created escrow again : ", tx)
+
+
+  })
+
+  it("TAKE", async () => {
+    const tx = await program.methods.take().accountsPartial({
+      escrow,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      maker: maker.publicKey,
+      taker: taker.publicKey,
+      mintA: mintA,
+      mintB: mintB,
+      systemProgram: SYSTEM_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      takerAtaA: takerAtaA.address,
+      takerAtaB: takerAtaB.address,
+      vault: vault,
+      makerAtaB: makerAtaB.address
+
+
+    }).signers([taker]).rpc({ commitment: "confirmed" })
+
+    console.log("✅ take signature : ", tx.toString())
+  })
+
 
   async function airdrop(connection: Connection, address: PublicKey, amount: number) {
     const lamports = amount * LAMPORTS_PER_SOL
