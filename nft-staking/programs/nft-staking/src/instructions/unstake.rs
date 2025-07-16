@@ -64,6 +64,7 @@ pub struct Unstake<'info> {
         close = user
     )]
     pub stake_account: Account<'info, StakeAccount>,
+
     pub metadata_program: Program<'info, Metadata>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -71,17 +72,50 @@ pub struct Unstake<'info> {
 
 impl<'info> Unstake<'info> {
     pub fn unstake(&mut self) -> Result<()> {
+        // ensure freeze period has passed
         let now = Clock::get()?.unix_timestamp;
 
-        let time_elapsed  = (now - self.stake_account.staked_at) as u32 / 86400 as u32;
-        require!(time_elapsed >= self.config.freeze_period, StakeError::FreezePeriodNotPassed);
+        // let time_elapsed  = (now - self.stake_account.staked_at) as u32 / 86400 as u32;
+        // require!(time_elapsed >= self.config.freeze_period, StakeError::FreezePeriodNotPassed);
 
-        let seeds = [b"seeds"]
+        let staked_at = self.stake_account.staked_at as i64;
+        let days = (now - staked_at) / 86_400;
+        require!(days >= (self.config.freeze_period as i64), StakeError::FreezePeriodNotPassed);
+
+        // thaw the forzen NFT via Metadata CPI
         let delegate = &self.stake_account.to_account_info();
-        let token_account = &self.user_account.to_account_info();
-        let edition = 
+        let token_account = &self.user_mint_ata.to_account_info();
+        let edition = &self.edition.to_account_info();
+        let mint = self.mint.to_account_info();
+        let token_program = self.token_program.to_account_info();
+        let metadata_program = self.metadata_program.to_account_info();
 
-        let cpi_program = self.metadata_program.to_account_info();
+        let mint_key = self.mint.key();
+        let config_key = self.config.key();
+
+        let seeds = &[b"stake", mint_key.as_ref(), config_key.as_ref(), &[self.stake_account.bump]];
+        let signer_seeds = &[&seeds[..]];
+
+        ThawDelegatedAccountCpi::new(&metadata_program, ThawDelegatedAccountCpiAccounts {
+            delegate: delegate,
+            token_account: token_account,
+            edition: edition,
+            mint: &mint,
+            token_program: &token_program,
+        }).invoke_signed(signer_seeds);
+
+        // Revoke delegate approval so user regains full control
+        let cpi_accounts = Revoke {
+            source: self.user_mint_ata.to_account_info(),
+            authority: self.user.to_account_info(),
+        };
+
+        let cpi_ctx = CpiContext::new(self.token_program.to_account_info(), cpi_accounts);
+        revoke(cpi_ctx)?;
+
+        // update on-chain state
+        self.user_account.amount_staked = self.user_account.amount_staked.saturating_sub(1);
+
         Ok(())
     }
 }
