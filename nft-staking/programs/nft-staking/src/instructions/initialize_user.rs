@@ -14,7 +14,7 @@ pub struct InitializeUser<'info> {
         seeds = [b"user", user.key().as_ref()],
         bump
     )]
-    pub user_account: Account<'info, UserAccountr>,
+    pub user_account: Account<'info, UserAccount>,
     pub system_program: Program<'info, System>,
 }
 

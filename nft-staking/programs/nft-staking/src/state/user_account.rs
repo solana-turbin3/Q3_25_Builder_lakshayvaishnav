@@ -7,3 +7,4 @@ pub struct UserAccount {
     pub amount_staked: u8,
     pub bump: u8,
 }
+
