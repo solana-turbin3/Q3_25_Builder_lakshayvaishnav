@@ -29,6 +29,12 @@ pub struct Stake<'info> {
     )]
     pub user_mint_ata: Account<'info, TokenAccount>,
 
+    /*
+    In the Metaplex Token Metadata program, 
+    every NFT’s on‑chain metadata is stored in a PDA (Program‑Derived Address) 
+    that’s computed according to a fixed scheme. Anchor lets you mirror that derivation 
+    in your #[derive(Accounts)] by specifying the exact same seeds.
+     */
     #[account(
         seeds = [b"metadata", metadata_program.key().as_ref(), mint.key().as_ref()],
         seeds::program = metadata_program.key(),
@@ -39,6 +45,9 @@ pub struct Stake<'info> {
     )]
     pub metadata: Account<'info, MetadataAccount>,
 
+    /*
+    	Confirms this is a “v1” NFT (MasterEdition) so freezing semantics apply correctly
+     */
     #[account(
         seeds = [b"metadata", metadata_program.key().as_ref(), mint.key().as_ref(), b"edition"],
         seeds::program = metadata_program.key(),
@@ -99,12 +108,21 @@ impl<'info> Stake<'info> {
         let token_program = &self.token_program.to_account_info();
         let metadata_program = &self.metadata_program.to_account_info();
 
+        /*
+            After you’ve approved your stake_account as a delegate for the user’s token account,
+             you need the Metadata program (the on‑chain MPL Token Metadata program) to actually 
+             freeze that delegated account.
+             - the token in user_mint_ata becomes non transferrable (locked)
+             - the metadata program marks it as "frozen" under the delegate's authority
+         */
         FreezeDelegatedAccountCpi::new(metadata_program, FreezeDelegatedAccountCpiAccounts {
-            delegate,
-            token_account,
-            edition,
-            mint,
-            token_program,
+            delegate, // stake account pda
+            token_account, // the user's ATA holding the nft
+
+            //the MasterEdition PDA (needed by the metadata program to ensure it’s an NFT edition)
+            edition, // the NFT'S master edition PDA
+            mint, // the NFT's mint
+            token_program, // the SPL token program
         }).invoke()?;
 
         self.stake_account.set_inner(StakeAccount {
