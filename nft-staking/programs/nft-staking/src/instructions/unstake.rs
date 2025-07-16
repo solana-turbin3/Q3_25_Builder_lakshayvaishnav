@@ -75,8 +75,7 @@ impl<'info> Unstake<'info> {
         // ensure freeze period has passed
         let now = Clock::get()?.unix_timestamp;
 
-        // let time_elapsed  = (now - self.stake_account.staked_at) as u32 / 86400 as u32;
-        // require!(time_elapsed >= self.config.freeze_period, StakeError::FreezePeriodNotPassed);
+      
 
         let staked_at = self.stake_account.staked_at as i64;
         let days = (now - staked_at) / 86_400;
