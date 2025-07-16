@@ -2,7 +2,7 @@ use anchor_lang::{ prelude::* };
 use constant_product_curve::{ ConstantProduct, CurveError };
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{ Mint, MintTo, Token, TokenAccount, Transfer },
+    token::{ mint_to, transfer, Mint, MintTo, Token, TokenAccount, Transfer },
 };
 use crate::Config;
 use crate::error::AmmError;
@@ -40,7 +40,7 @@ pub struct Deposit<'info> {
     #[account(
         mut,
         seeds = [b"lp", config.key().as_ref()],
-        bump,
+        bump = config.lp_bump,
     )]
     pub mint_lp: Account<'info, Mint>,
 
@@ -58,6 +58,7 @@ pub struct Deposit<'info> {
     )]
     pub user_x: Account<'info, TokenAccount>,
 
+    // ATA for the lp tokens
     #[account(
         init_if_needed,
         payer = user,
@@ -95,11 +96,12 @@ impl<'info> Deposit<'info> {
         };
 
         // add slippage error
-        // require!(x <= max_x && y <= max_y, CurveError::SlippageLimitExceeded);
         require!(x <= max_x && y <= max_y, AmmError::InvalidAmount);
 
-        self.deposit_tokens(true, x);
-        self.deposit_tokens(false, y);
+        self.deposit_tokens(true, x)?;
+        self.deposit_tokens(false, y)?;
+
+        self.mint_lp_tokens(amount)?;
 
         Ok(())
     }
@@ -120,7 +122,7 @@ impl<'info> Deposit<'info> {
 
         let ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-        transfer(ctx, amount);
+        transfer(ctx, amount)?;
 
         Ok(())
     }
@@ -134,7 +136,13 @@ impl<'info> Deposit<'info> {
             authority: self.config.to_account_info(),
         };
 
-        let seeds = &[&b"config"[..]];
+        let seeds = &[&b"config"[..], &self.config.seed.to_le_bytes(), &[self.config.config_bump]];
+
+        let signer_seeds = &[&seeds[..]];
+
+        let ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+
+        mint_to(ctx, amount)?;
 
         Ok(())
     }
