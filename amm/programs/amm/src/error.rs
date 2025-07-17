@@ -17,6 +17,9 @@ pub enum AmmError {
     InsufficientTokenY,
     #[msg("Insufficien Balance")]
     InsufficientBalance,
+    #[msg("Pool is locked")]
+    PoolLocked
+
 }
 
 // TODO: Understand how the From trait works in Rust

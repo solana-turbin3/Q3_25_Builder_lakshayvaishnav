@@ -106,7 +106,7 @@ impl<'info> Deposit<'info> {
         Ok(())
     }
 
-    pub fn deposit_tokens(&mut self, is_x: bool, amount: u64) -> Result<()> {
+    pub fn deposit_tokens(&self, is_x: bool, amount: u64) -> Result<()> {
         let (from, to) = match is_x {
             true => (self.user_x.to_account_info(), self.vault_x.to_account_info()),
             false => (self.user_y.to_account_info(), self.vault_y.to_account_info()),
@@ -127,7 +127,7 @@ impl<'info> Deposit<'info> {
         Ok(())
     }
 
-    pub fn mint_lp_tokens(&mut self, amount: u64) -> Result<()> {
+    pub fn mint_lp_tokens(&self, amount: u64) -> Result<()> {
         let cpi_program = self.token_program.to_account_info();
 
         let cpi_accounts = MintTo {
