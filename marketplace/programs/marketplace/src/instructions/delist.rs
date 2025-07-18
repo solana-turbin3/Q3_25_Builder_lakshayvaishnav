@@ -53,7 +53,7 @@ pub struct Delist<'info> {
 }
 
 impl<'info> Delist<'info> {
-    pub fn withdraw(&mut self, bumps: &DelistBumps) -> Result<()> {
+    pub fn withdraw(&mut self) -> Result<()> {
         let cpi_program = self.token_program.to_account_info();
 
         let cpi_accounts = TransferChecked {
@@ -73,7 +73,7 @@ impl<'info> Delist<'info> {
 
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
 
-        transfer_checked(cpi_ctx, 1, self.maker_mint.decimals);
+        transfer_checked(cpi_ctx, 1, self.maker_mint.decimals)?;
 
         Ok(())
     }
@@ -97,7 +97,7 @@ impl<'info> Delist<'info> {
 
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, close_accounts, signer_seeds);
 
-        close_account(cpi_ctx);
+        close_account(cpi_ctx)?;
         Ok(())
     }
 }
