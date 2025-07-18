@@ -12,14 +12,14 @@ This is a comprehensive reference to the code I wrote and edited while learning 
 This repository contains a collection of Solana programs and supporting scripts developed as part of the Solana Turbin3 Builder Cohort. The codebase covers a range of DeFi and NFT primitives, including AMMs, vaults, marketplaces, escrows, and staking, as well as prerequisite exercises in both Rust and TypeScript.
 
 ## 📂 Content/Folders
-- **amm/**: Automated Market Maker (AMM) Anchor program for decentralized token swaps.
-- **vault/**: Anchor program for secure asset vaults (deposits, withdrawals, and management).
-- **marketplace/**: Anchor program for a decentralized marketplace (likely for NFTs or tokens).
-- **escrow/**: Anchor program for escrowed transactions between parties.
-- **nft-staking/**: Anchor program for staking NFTs and earning rewards.
-- **solana-starter/**: Starter code and scripts for Solana development, with both Rust (`rs/`) and TypeScript (`ts/`) examples.
-- **prereq-rs/**: Rust prerequisite exercises for Solana development (keygen, airdrop, transfer, etc.).
-- **prereq-ts/**: TypeScript prerequisite scripts for Solana basics (keygen, airdrop, transfer, enroll, etc.).
+- [amm/](amm/): Automated Market Maker (AMM) Anchor program for decentralized token swaps.
+- [vault/](vault/): Anchor program for secure asset vaults (deposits, withdrawals, and management).
+- [marketplace/](marketplace/): Anchor program for a decentralized marketplace (likely for NFTs or tokens).
+- [escrow/](escrow/): Anchor program for escrowed transactions between parties.
+- [nft-staking/](nft-staking/): Anchor program for staking NFTs and earning rewards.
+- [solana-starter/](solana-starter/): Starter code and scripts for Solana development, with both Rust (`rs/`) and TypeScript (`ts/`) examples.
+- [prereq-rs/](prereq-rs/): Rust prerequisite exercises for Solana development (keygen, airdrop, transfer, etc.).
+- [prereq-ts/](prereq-ts/): TypeScript prerequisite scripts for Solana basics (keygen, airdrop, transfer, enroll, etc.).
 
 ## 🚀 Getting Started
 
