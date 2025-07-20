@@ -102,20 +102,6 @@ describe("amm", () => {
       program.programId
     );
 
-    // userLp = await getOrCreateAssociatedTokenAccount(
-    //   connection,
-    //   user,
-    //   mintLp,
-    //   user.publicKey
-    // )
-
-  //   userLp = await getOrCreateAssociatedTokenAccount(
-  //     connection,
-  //     user,
-  //     mintLp,
-  //     user.publicKey // owner
-  // );
-
   });
 
 
@@ -136,11 +122,6 @@ describe("amm", () => {
   });
 
   it("Deposit", async () => {
-
-    const mintLpAccount = await connection.getAccountInfo(mintLp);
-    console.log("mintLp owner:", mintLpAccount?.owner.toBase58()); // should be Token Program ID
-
-
     const tx = await program.methods.deposit(
       new BN(10_000_000),
       new BN(10_000_000),
