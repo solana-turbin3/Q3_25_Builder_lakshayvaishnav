@@ -2,10 +2,10 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Amm } from "../target/types/amm";
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { createMint, Account, getOrCreateAssociatedTokenAccount, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token"
+import { createMint, Account, getOrCreateAssociatedTokenAccount, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mintTo, getAssociatedTokenAddress } from "@solana/spl-token"
 import { BN } from "bn.js";
 import { randomBytes } from "node:crypto"
-import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
+import { program, SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 describe("amm", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
@@ -14,6 +14,7 @@ describe("amm", () => {
 
   const connection = provider.connection
   let initalizer = Keypair.generate();
+  let user = Keypair.generate();
 
   let mintX: PublicKey;
   let mintY: PublicKey;
@@ -21,11 +22,15 @@ describe("amm", () => {
   let configPda: PublicKey;
   let vaultY: Account;
   let vaultX: Account;
+  let userX: Account;
+  let userY: Account;
+  let userLp: PublicKey;
   const seed = new BN(randomBytes(8))
 
   before(async () => {
 
     await airdrop(initalizer.publicKey, connection);
+    await airdrop(user.publicKey, connection);
 
     mintX = await createMint(
       connection,
@@ -43,17 +48,45 @@ describe("amm", () => {
       6
     )
 
-    mintLp = await createMint(
+
+
+    userX = await getOrCreateAssociatedTokenAccount(
       connection,
-      initalizer,
-      configPda,
-      null,
-      8,
+      user,
+      mintX,
+      user.publicKey
     )
+    userY = await getOrCreateAssociatedTokenAccount(
+      connection,
+      user,
+      mintY,
+      user.publicKey
+    )
+
+    const tx1 = await mintTo(
+      connection,
+      user,
+      mintX,
+      userX.address,
+      initalizer,
+      100_000_000
+    )
+
+    const tx2 = await mintTo(
+      connection,
+      user,
+      mintY,
+      userY.address,
+      initalizer,
+      100_000_000
+    )
+
+
 
     console.log("⚡ mint x : ", mintX.toBase58());
     console.log("⚡ mint y : ", mintY.toBase58());
-    console.log("⚡ mint lp : ", mintLp.toString());
+    console.log("tx 1 : ", tx1);
+    console.log("tx 2 : ", tx2);
 
     [configPda,] = PublicKey.findProgramAddressSync(
       [Buffer.from("config"),
@@ -62,6 +95,26 @@ describe("amm", () => {
       program.programId);
 
     console.log("✅ config pda : ", configPda.toBase58());
+
+
+    [mintLp,] = PublicKey.findProgramAddressSync(
+      [Buffer.from("lp"), configPda.toBuffer()],
+      program.programId
+    );
+
+    // userLp = await getOrCreateAssociatedTokenAccount(
+    //   connection,
+    //   user,
+    //   mintLp,
+    //   user.publicKey
+    // )
+
+  //   userLp = await getOrCreateAssociatedTokenAccount(
+  //     connection,
+  //     user,
+  //     mintLp,
+  //     user.publicKey // owner
+  // );
 
   });
 
@@ -81,9 +134,34 @@ describe("amm", () => {
 
     console.log("✅ inited amm : ", tx.toString());
   });
+
+  it("Deposit", async () => {
+
+    const mintLpAccount = await connection.getAccountInfo(mintLp);
+    console.log("mintLp owner:", mintLpAccount?.owner.toBase58()); // should be Token Program ID
+
+
+    const tx = await program.methods.deposit(
+      new BN(10_000_000),
+      new BN(10_000_000),
+      new BN(10_000_000)).accountsPartial(
+        {
+          user: user.publicKey,
+          mintX,
+          mintY,
+          config: configPda,
+          userX: userX.address,
+          userY: userY.address,
+          mintLp,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SYSTEM_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID
+        }
+      ).signers([user]).rpc({ commitment: "confirmed" })
+
+    console.log("✅ deposited toknes : ", tx.toString())
+  })
 });
-
-
 
 // --------------- helper function
 async function airdrop(address: PublicKey, connection: Connection) {
