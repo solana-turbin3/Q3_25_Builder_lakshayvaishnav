@@ -4,7 +4,7 @@ use anchor_spl::{ associated_token::AssociatedToken, token::{ Mint, Token, Token
 use crate::state::Config;
 
 #[derive(Accounts)]
-#[instruction(seed: u8)]
+#[instruction(seed: u64)]
 pub struct Initialize<'info> {
     #[account(mut)]
     pub initializer: Signer<'info>,
