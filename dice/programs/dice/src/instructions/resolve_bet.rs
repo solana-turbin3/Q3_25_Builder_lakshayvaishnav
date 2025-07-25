@@ -36,6 +36,7 @@ pub struct ResolveBet<'info> {
     #[account(
         mut,
         close = player,
+        has_one = player,
         seeds = [b"bet", vault.key().as_ref(), bet.seed.to_le_bytes().as_ref()],
         bump = bet.bump,
     )]
@@ -104,6 +105,8 @@ impl<'info> ResolveBet<'info> {
         let roll = (lower.wrapping_add(upper).wrapping_rem(100) as u8) + 1;
 
         if self.bet.roll > roll {
+            // (10000 - house edge)/(target * 100)
+
             // Payout minus house edge
             let payout = (self.bet.amount as u128)
                 .checked_mul(10000 - (HOUSE_EDGE as u128))
