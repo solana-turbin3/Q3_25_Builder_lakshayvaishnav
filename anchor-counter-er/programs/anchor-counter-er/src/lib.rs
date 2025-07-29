@@ -78,6 +78,34 @@ pub mod anchor_counter_er {
 
         Ok(())
     }
+
+    pub fn undelegate(ctx: Context<IncrementAndCommit>) -> Result<()> {
+        commit_and_undelegate_accounts(
+            &ctx.accounts.payer,
+            vec![&ctx.accounts.counter.to_account_info()],
+            &ctx.accounts.magic_context,
+            &ctx.accounts.magic_program
+        )?;
+
+        Ok(())
+    }
+
+    pub fn increment_and_undelgate(ctx: Context<IncrementAndCommit>) -> Result<()> {
+        let counter = &mut ctx.accounts.counter;
+
+        counter.count += 1;
+
+        counter.exit(&crate::ID);
+
+        commit_and_undelegate_accounts(
+            &ctx.accounts.payer,
+            vec![&ctx.accounts.counter.to_account_info()],
+            &ctx.accounts.magic_context,
+            &ctx.accounts.magic_program
+        )?;
+
+        Ok(())
+    }
 }
 
 #[delegate]
