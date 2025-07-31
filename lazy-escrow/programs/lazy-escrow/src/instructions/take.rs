@@ -1,5 +1,7 @@
 pub use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
+use anchor_spl::{associated_token::AssociatedToken, token::{close_account, transfer, CloseAccount, Mint, Token, TokenAccount, Transfer}};
+
+use crate::{Escrow, LazyEscrow};
 
 #[derive(Accounts)]
 pub struct Take<'info> {
@@ -55,7 +57,7 @@ pub struct Take<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl <'info> Taker <'info> {
+impl <'info> Take <'info> {
     pub fn transfer_token_b(&mut self) -> Result<()> {
 
         let cpi_program = self.token_program.to_account_info();
