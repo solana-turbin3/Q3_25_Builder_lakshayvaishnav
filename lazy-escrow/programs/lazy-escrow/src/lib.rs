@@ -9,10 +9,13 @@ pub use constants::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("BghUk9bKYnXcxCbHTRBwX2XeXRv6rPpzwFhJPBFzpv5Z");
+declare_id!("Bu77ZW7LAXPh7CQmCad71hLKF4G7uoCYEzfWZjaC72v9");
 
 #[program]
-pub mod quadratic_funding {
+pub mod lazy_escrow {
     use super::*;
 
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        initialize::handler(ctx)
+    }
 }
