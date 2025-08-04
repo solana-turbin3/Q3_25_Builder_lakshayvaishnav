@@ -13,17 +13,23 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = admin,
-        seeds = [b"marktplace", name.as_bytes()],
+        seeds = [b"marketplace", name.as_bytes()],
         bump,
         space = 8 + Marketplace::INIT_SPACE
     )]
     pub marketplace: Account<'info, Marketplace>,
 
-
     // a regular solana account.
     // to hold marketpace funds.
-    #[account(seeds = [b"treasury", marketplace.key().as_ref()], bump)]
-    pub treasury: SystemAccount<'info>,
+    /// CHECK : it is safe man....
+    #[account(
+        init,
+        payer = admin,
+        space = 0,
+        seeds = [b"treasury", marketplace.key().as_ref()],
+        bump
+    )]
+    pub treasury: UncheckedAccount<'info>,
 
     // spl token mint account for rewards token.
     #[account(
@@ -42,7 +48,6 @@ pub struct Initialize<'info> {
 
 impl<'info> Initialize<'info> {
     pub fn init(&mut self, name: String, fee: u16, bumps: &InitializeBumps) -> Result<()> {
-
         // FIX-LATER : error in size
         require!(!name.is_empty() && name.len() < 20, ErrorCode::NameTooLong);
 
