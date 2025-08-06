@@ -3,7 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Marketplace } from "../target/types/marketplace";
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
-
+import { createMint, getOrCreateAssociatedTokenAccount, getAssociatedTokenAddress, mintTo, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
 
 describe("marketplace", () => {
 
@@ -23,14 +23,31 @@ describe("marketplace", () => {
 
   let systemProgram: PublicKey;
   let tokenProgram: PublicKey;
+  let metadataProgram: PublicKey;
+  let associatedTokenProgram: PublicKey;
 
   let name: string;
   let fee: number;
+
+  let maker: Keypair;
+  let makerMint: PublicKey;
+  let makerAta: PublicKey;
+
+  let vault: PublicKey;
+
+  let listingPda: PublicKey;
+
+  let collectionMint: PublicKey;
+
+  let metdataPda: PublicKey;
+  let masterEditionPda: PublicKey;
+
 
 
 
   before(async () => {
 
+    // ----------------------------------------
     name = "Bored ape"
     fee = 100;
 
@@ -55,12 +72,56 @@ describe("marketplace", () => {
     systemProgram = SystemProgram.programId;
     tokenProgram = TOKEN_PROGRAM_ID;
 
+    // ---------------------------------------------
+    maker = Keypair.generate();
+    await airdrop(maker.publicKey, provider.connection);
+
+    makerMint = await createMint(
+      provider.connection,
+      maker,
+      maker.publicKey,
+      null,
+      0,
+    )
+
+    const ataAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      maker,
+      makerMint,
+      maker.publicKey
+    );
+    makerAta = ataAccount.address
+
+    // mint exactly one token
+    await mintTo(
+      connection,
+      maker,
+      makerMint,
+      makerAta,
+      maker,
+      1,
+    );
+
+    [listingPda] = await PublicKey.findProgramAddressSync(
+      [marketplacePda.toBuffer(), makerMint.toBuffer()],
+      program.programId
+    );
+
+
+    // creating vault ata,
+    vault = await getAssociatedTokenAddress(
+      makerMint,
+      listingPda,
+      true,
+      TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+
+
   })
 
+
   it("it runs initialize ixn", async () => {
-
-
-
     let tx = await program.methods
       .initialize(name, fee)
       .accountsPartial({
@@ -73,8 +134,14 @@ describe("marketplace", () => {
       })
       .signers([admin])
       .rpc()
-
   });
+
+  it("it list the nft", async () => {
+    let tx = await program.methods
+      .list()
+      .accounts()
+      .rpc()
+  })
 });
 
 //---------------- helper function 
